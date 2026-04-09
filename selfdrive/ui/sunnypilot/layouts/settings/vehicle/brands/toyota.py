@@ -23,6 +23,10 @@ DESCRIPTIONS = {
   'stop_and_go_hack': tr_noop(
     'sunnypilot will allow some Toyota/Lexus cars to auto resume during stop and go traffic. ' +
     'This feature is only applicable to certain models that are able to use longitudinal control. This is an alpha feature. Use at your own risk.'
+  ),
+  'reverse_cruise_increase': tr_noop(
+    'Reverse the cruise button behavior so a short press increases speed by 5 instead of 1. ' +
+    'Only affects cars where the PCM controls cruise speed.'
   )
 }
 
@@ -47,9 +51,18 @@ class ToyotaSettings(BrandSettings):
       enabled=lambda: not ui_state.engaged,
     )
 
+    self.reverse_cruise_increase = toggle_item_sp(
+      lambda: tr("Reverse Cruise Speed Increase"),
+      description=lambda: tr(DESCRIPTIONS["reverse_cruise_increase"]),
+      initial_state=ui_state.params.get_bool("ToyotaReverseCruiseIncrease"),
+      callback=self._on_enable_reverse_cruise_increase,
+      enabled=lambda: not ui_state.engaged,
+    )
+
     self.items = [
       self.enforce_stock_longitudinal,
       self.stop_and_go_hack,
+      self.reverse_cruise_increase,
     ]
 
   def _on_enable_enforce_stock_longitudinal(self, state: bool):
@@ -93,6 +106,10 @@ class ToyotaSettings(BrandSettings):
     else:
       ui_state.params.put_bool("ToyotaStopAndGoHack", False)
       ui_state.params.put_bool("OnroadCycleRequested", True)
+
+  def _on_enable_reverse_cruise_increase(self, state: bool):
+    ui_state.params.put_bool("ToyotaReverseCruiseIncrease", state)
+    ui_state.params.put_bool("OnroadCycleRequested", True)
 
   def update_settings(self):
     if ui_state.CP is not None:
